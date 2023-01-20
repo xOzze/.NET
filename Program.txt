@@ -1,0 +1,87 @@
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
+using System;
+using System.Text.Json;
+
+class Program
+    {
+        static void Main(string[] args)
+        {
+            // Connect to the MongoDB server
+            var client = new MongoClient("mongodb://localhost:27017");
+            var database = client.GetDatabase("mydb");
+            var collection = database.GetCollection<BsonDocument>("goods");
+
+            while (true)
+            {
+                // Show menu
+                Console.WriteLine("1. Insert a new item");
+                Console.WriteLine("2. Update an item");
+                Console.WriteLine("3. Delete an item");
+                Console.WriteLine("4. View all items");
+                Console.WriteLine("5. Exit");
+                Console.Write("Enter your choice: ");
+
+                // Get user input
+                var input = Console.ReadLine();
+
+                // Perform corresponding operation
+                switch (input)
+                {
+                    case "1":
+                        // Insert a new item
+                        Console.Write("Enter item name: ");
+                        var name = Console.ReadLine();
+                        Console.Write("Enter item description: ");
+                        var description = Console.ReadLine();
+                        Console.Write("Enter item price: ");
+                        var price = Convert.ToDouble(Console.ReadLine());
+
+                        var document = new BsonDocument
+                    {
+                        { "name", name },
+                        { "description", description },
+                        { "price", price }
+                    };
+                        collection.InsertOne(document);
+                        Console.WriteLine("Item inserted successfully.");
+                        break;
+                    case "2":
+                        // Update an item
+                        Console.Write("Enter item name: ");
+                        var updateName = Console.ReadLine();
+                        Console.Write("Enter new price: ");
+                        var newPrice = Convert.ToDouble(Console.ReadLine());
+
+                        var filter = Builders<BsonDocument>.Filter.Eq("name", updateName);
+                        var update = Builders<BsonDocument>.Update.Set("price", newPrice);
+                        collection.UpdateOne(filter, update);
+                        Console.WriteLine("Item updated successfully.");
+                        break;
+                    case "3":
+                        // Delete an item
+                        Console.Write("Enter item name: ");
+                        var deleteName = Console.ReadLine();
+
+                        var deleteFilter = Builders<BsonDocument>.Filter.Eq("name", deleteName);
+                        collection.DeleteOne(deleteFilter);
+                        Console.WriteLine("Item deleted successfully.");
+                        break;
+                    case "4":
+                        // View all items
+                        var query = collection.Find(new BsonDocument()).ToList();
+                        foreach (var item in query)
+                        {
+                            Console.WriteLine(item);
+                        }
+                        break;
+                    case "5":
+                        // Exit the program
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice. Please enter a number between 1 and 5.");
+                        break;
+                }
+            }
+        }
+}
